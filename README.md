@@ -6,7 +6,9 @@ This is the repository of my first year of graduate studies lab project. I study
 
 ```
 * simple-models/
-  ** bethe.py  : Describes gelation using mean-field theory approximation ; gelation transition occurs on a Bethe lattice, a special type of site percolation model (oftenly called Bernouilli percolation)
+  ** bethe.py  : Describes gelation using mean-field theory approximation
+  Gelation transition occurs on a Bethe lattice, a special type of bond-
+  percolation model (oftenly called Bernouilli percolation)
 ```
 
 ## References
