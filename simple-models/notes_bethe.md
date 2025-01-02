@@ -5,7 +5,7 @@ Bethe lattice has been a convenient tool to describe gelation. It is a special c
 * Each monomer is represented by a node.
 * We define functionality of the monomer to be the maximum number of links a node can possess, and note it $f$.
 * The root node is considered to be linked to a parent node which is not represented, so it can have a maximum of $f-1$ children.
-* Each link has a probability $p \in [0,1] $ to occur.
+* Each link has a probability $p \in [0,1]$ to occur.
 * A monomer can only bond with the $f$ neighbouring monomers.
 * Graph is assumed to be infinite.
 
