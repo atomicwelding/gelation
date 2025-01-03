@@ -20,3 +20,12 @@ In construction.
 ## Numerical results [file : `bethe.py`]
 
 We represent the lattice as an adjacency matrix of dimension $n_\text{nodes}$ and construct it following building rules described above.
+
+
+### Conductance
+
+As we know, conductance of a rod-like system is given by the relationship
+
+$$G \propto \frac{\sigma}{L}$$
+
+where $\sigma$ is the conductivity of the material and $L$ is the length of the system. We propose to assume that $\sigma$ is an intrinsic (intensive) property of the polymer and remains constant regardless of the system's configuration. Consequently, $G$ is inversely proportional to $L$, that we can define as the maximum degree of polymerization as it corresponds to the size of the gel cluster. Understanding how $L$ evolves with $p$ is therefore crucial for determining the behavior of $G$. However, this approximation may lead to caveats, as it neglects potential variations in $\sigma$ due to structural or environmental factors, such as electrons delocalization and so.
