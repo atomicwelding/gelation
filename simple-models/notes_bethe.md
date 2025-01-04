@@ -17,15 +17,25 @@ From that, analytical and numerical results can be derived. We define $p_c$ the 
 In construction. 
 
 
-## Numerical results [file : `bethe.py`]
+## Simulation [file : `bethe.py`]
 
-We represent the lattice as an adjacency matrix of dimension $n_\text{nodes}$ and construct it following building rules described above.
+We represent the lattice as an adjacency matrix of dimension $n_\text{monomers}$ and construct it following building rules described above.
 
+
+### Average degree of polymerization
+
+This quantity is pretty straightforward to obtain : we count the number of nodes in each connected components and divide by the number of components.
+
+### Pgel, Psol
+
+This quantity is the ratio between the degree of polymerization of the gel and the total number of monomers. $P_\text{sol} = 1 - P_\text{gel}$.
 
 ### Conductance
 
-As we know, conductance of a rod-like system is given by the relationship
+We propose a model to compute the conductance of the system. Once percolation occurs, we focus on the largest connected component of the network, referred to as the *gel*. Specifically, we randomly select a leaf node (a node with degree 1) from the gel, which we designate as the *root* node. Next, we introduce a new node, referred to as the *superleaf*, into the gel graph. This superleaf is connected to all other leaf nodes in the gel except for the root node. To compute the conductance, we apply a voltage difference of 1V between the root and superleaf nodes, solving Kirchhoff’s laws for the resulting network. In practice, this involves calculating the resistance distance using the Moore-Penrose pseudo-inverse formalism.
 
-$$G \propto \frac{\sigma}{L}$$
+This model aims to approximate the experimental situation by representing the gel as a conductive network, where current flows through the largest connected cluster. The addition of the superleaf is a way to simulate boundary conditions, similar to how electrodes might interact with multiple points in a real system. On the other hand, the choice of the root node is made random because the exact location of current injection in real systems is often not well-defined or uniform. Additionally, the topology of the resistance network—specifically, which resistances are in parallel or in series—can vary significantly depending on the selected root node. By making this choice random and relying on statistical averaging across multiple simulations, we aim to reduce potential biases and ensure that the computed conductance reflects the overall network behavior rather than being overly influenced by specific configurations.
 
-where $\sigma$ is the conductivity of the material and $L$ is the length of the system. We propose to assume that $\sigma$ is an intrinsic (intensive) property of the polymer and remains constant regardless of the system's configuration. Consequently, $G$ is inversely proportional to $L$, that we can define as the maximum degree of polymerization as it corresponds to the size of the gel cluster. Understanding how $L$ evolves with $p$ is therefore crucial for determining the behavior of $G$. However, this approximation may lead to caveats, as it neglects potential variations in $\sigma$ due to structural or environmental factors, such as electrons delocalization and so.
+### Results [file : `building_statistics.py`, `plotting.py`]
+
+We perform statistics for different $f$ with $n_\text{monomers} = 5000$ monomers. For each system, we're taking 200 $p$ from $0$ to $1$ evenly distributed. We're averaging over 100 such systems.
