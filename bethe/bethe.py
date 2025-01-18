@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 nmonomers = 1000
 lattice = np.zeros((nmonomers, nmonomers)) 
 
-p = 1. # probability of bonding
-f = 3 # functionnaliy of each monomer
+p = 0.8 # probability of bonding
+f = 4 # functionnaliy of each monomer
 
 
 shouldConnect = lambda: np.random.choice([0, 1], p=[1 - p, p])
@@ -58,7 +58,6 @@ for leaf in leaves:
 
 
 # we compute the resistivity
-print("test")
 resistivity = nx.resistance_distance(gel, root, super_leaf)
 
 

@@ -2,14 +2,17 @@ import sys
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
-N_TEST = 100
-N_POINTS = 200
+N_TEST = 1
+N_POINTS = 100
 
+
+start = time.time()
 
 # parameters
-nmonomers = 5000
-f = 3
+nmonomers = 10000
+f = 4
 
 lattice = np.zeros((nmonomers, nmonomers))
 
@@ -82,6 +85,10 @@ for test in range(N_TEST):
         conductances[test, idx] = 1/resistivity
 
 
+end = time.time()
+simulation_time = end - start
+
+start = time.time()
 print("=== writing data ...===")
 with open("statistics_conductance.txt","w") as saving:
     saving.write(f"{N_TEST} {N_POINTS} {nmonomers} {f}\n")
@@ -105,4 +112,9 @@ with open("statistics_Pgel.txt", "w") as saving:
         saving.write(f"{p} ")
         for test in range(N_TEST):
             saving.write(f"{Pgels[test,idx]} ")
-        saving.write("\n")           
+        saving.write("\n")
+end = time.time()
+writing_time = end - start
+
+print(f"simulation time: {simulation_time:.2f}s elapsed")
+print(f"writing time: {writing_time:.2f}s elapsed")
