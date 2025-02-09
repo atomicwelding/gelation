@@ -1,10 +1,11 @@
-SRC = main.f90 mod_utils.f90
+SRC = main.f90 mod_utils.f90 mod_math.f90
 LDFLAG = -framework Accelerate
 
 .PHONY : all
 
 all: $(SRC)
 	gfortran -c mod_utils.f90
+	gfortran -c mod_math.f90
 	gfortran -c main.f90
 	gfortran $(SRC) -o main $(LDFLAG)
 
