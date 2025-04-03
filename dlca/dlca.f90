@@ -1,6 +1,7 @@
 program DLCA
 
     ! TODO
+    !! Add the condition for which we stop the simulation.
     !! Reread the article to determine the parameters to compute in order to reproduce the figures.
     implicit none
 
