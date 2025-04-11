@@ -1,9 +1,8 @@
 program DLCA
     implicit none
 
-    integer, parameter :: Npts = 10
-    real, parameter :: phi0 = 0.25! defined as N/L
-    integer, parameter :: L = 10
+    integer, parameter :: Npts = 10 ! number of phis
+    integer, parameter :: L = 05 ! size of the box
     real, parameter :: alpha = -0.55
     
     integer, dimension(0:L-1, 0:L-1, 0:L-1) :: grid
@@ -31,7 +30,7 @@ program DLCA
     character(len=*), parameter :: filepath = "P.dat"
 
     do phi=1,Npts
-        phis(phi-1) = phi * 0.1/(Npts - 1) 
+        phis(phi-1) = 0. + phi * 0.1/(Npts - 1) 
     end do
 
     open(fd, file=filepath, status="replace", iostat=io, iomsg=errmsg)
@@ -41,7 +40,9 @@ program DLCA
     end if 
 
     write(fd, *) "@ L = ", L
+    call flush(fd)
     write(fd, * ) "@ phi0, P"
+    call flush(fd)
     do phi=0, Npts-1
         N = int(phis(phi) * L**3)
         print *, "Running for ", N, " particles"
@@ -75,6 +76,7 @@ program DLCA
         print *, "Number of runs", runs
         print *
         write(fd, *) phis(phi), dble(number_percolate)/dble(runs)
+        call flush(fd)
         
         deallocate(particles)
         deallocate(cluster_size)
