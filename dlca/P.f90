@@ -2,7 +2,7 @@ program DLCA
     implicit none
 
     integer, parameter :: Npts = 10 ! number of phis
-    integer, parameter :: L = 05 ! size of the box
+    integer, parameter :: L = 20 ! size of the box
     real, parameter :: alpha = -0.55
     
     integer, dimension(0:L-1, 0:L-1, 0:L-1) :: grid
@@ -45,12 +45,20 @@ program DLCA
     call flush(fd)
     do phi=0, Npts-1
         N = int(phis(phi) * L**3)
+       
         print *, "Running for ", N, " particles"
         allocate(particles(0:N-1))
         allocate(cluster_size(0:N-1))
         grid = -1
         hasEnded = .false.
         number_percolate = 0
+
+        !!! 
+        !!! ARGUMENT TO FORCE CONVERGENCE : IF N < L, THEN THE SYSTEM CANNOT PERCOLATE.
+        !!! AS SUCH, WE CAN DIRECTLY GO TO NEXT ITERATION 
+        !!!
+
+        if(N < L) goto 82
 
         do run=0,runs-1
             !!! INIT !!! 
@@ -70,8 +78,8 @@ program DLCA
             end do
             if(hasPercolated) number_percolate = number_percolate + 1  
         end do
-    
-        print *, "Number of particles", N
+
+        82 print *, "Number of particles", N
         print *, "Number of percolated systems ", number_percolate
         print *, "Number of runs", runs
         print *
