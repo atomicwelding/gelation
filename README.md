@@ -1,6 +1,6 @@
 # gelation
 
-This is the repository of my first year of graduate studies lab project. I study how the conductivity evolves in conductive polymers near the gel point. I am broadly studying percolation theory in gel systems and the conformations of low-functionnality polymers.
+This is the repository of my first year of graduate studies lab project I am broadly studying percolation theory in gel systems and the conformations of low-functionnality polymers.
 
 ## Repository structure 
 
