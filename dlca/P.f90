@@ -29,8 +29,9 @@ program DLCA
     character(len=100) :: errmsg
     character(len=*), parameter :: filepath = "P.dat"
 
-    do phi=1,Npts
-        phis(phi-1) = 0. + phi * 0.1/(Npts - 1) 
+    ! Initialize phis from 0 to 0.1 in Npts steps
+    do phi = 0, Npts-1
+        phis(phi) = real(phi) * 0.1 / real(Npts-1)
     end do
 
     open(fd, file=filepath, status="replace", iostat=io, iomsg=errmsg)
@@ -266,7 +267,7 @@ subroutine trial
     deallocate(active_clusters)
 
     ! choose sign of displacement
-    d = 2
+    d = 1
     call random_number(r)
     if (r <= 0.5) d = -1 * d
 
