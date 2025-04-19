@@ -1,9 +1,11 @@
 program DLCA
     implicit none
 
-    integer, parameter :: Npts = 10 ! number of phis
+    integer, parameter :: Npts = 40 ! number of phis
     integer, parameter :: L = 20 ! size of the box
     real, parameter :: alpha = -0.55
+    
+    integer, parameter :: MAX_NO_MORE_AGGREGATION = 1e5 !!! Checking for no dynamics
     
     integer, dimension(0:L-1, 0:L-1, 0:L-1) :: grid
     type :: Particle
@@ -21,6 +23,7 @@ program DLCA
 
     integer :: run, runs = 100
     integer :: number_percolate
+    integer :: no_growth_steps, prev_max_cluster
 
     real, dimension(0:Npts-1) :: phis
     integer phi
@@ -31,7 +34,7 @@ program DLCA
 
     ! Initialize phis from 0 to 0.1 in Npts steps
     do phi = 0, Npts-1
-        phis(phi) = real(phi) * 0.1 / real(Npts-1)
+        phis(phi) = real(phi) * 0.3 / real(Npts-1)
     end do
 
     open(fd, file=filepath, status="replace", iostat=io, iomsg=errmsg)
@@ -68,6 +71,8 @@ program DLCA
             hasEnded = .false.
             hasPercolated = .false.
             grid = -1
+            no_growth_steps = 0
+            prev_max_cluster = 1
             call init_particles
     
             !!! RUNNING THE SIMULATION
@@ -76,6 +81,17 @@ program DLCA
                 Nc = count_active_clusters()
                 tgel = tgel + 1.0 / Nc
                 call trial
+
+                if (maxval(cluster_size) <= prev_max_cluster) then
+                    no_growth_steps = no_growth_steps + 1
+                else
+                    no_growth_steps = 0
+                    prev_max_cluster = maxval(cluster_size)
+                end if
+
+                if (no_growth_steps >= MAX_NO_MORE_AGGREGATION) then
+                    hasEnded = .true.
+                end if
             end do
             if(hasPercolated) number_percolate = number_percolate + 1  
         end do
@@ -127,8 +143,10 @@ subroutine checkEndSimulation
         cid = particles(i)%cluster_id
         if (particles(i)%x == 0)    touches(cid)%min_x = .true.
         if (particles(i)%x == L-1)  touches(cid)%max_x = .true.
+        
         if (particles(i)%y == 0)    touches(cid)%min_y = .true.
         if (particles(i)%y == L-1)  touches(cid)%max_y = .true.
+        
         if (particles(i)%z == 0)    touches(cid)%min_z = .true.
         if (particles(i)%z == L-1)  touches(cid)%max_z = .true.
     end do
