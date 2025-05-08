@@ -5,7 +5,7 @@ program DLCA
   integer, parameter :: Npts = 40 ! number of phis
   integer, parameter :: L = 10 ! size of the box
   integer, parameter :: MAX_STEPS_WITHOUT_AGGREGATION = 1e5  !!! Checking for no dynamics
-  real, parameter :: alpha = 0.55
+  real, parameter :: alpha = 0.55, MAX_PHI = 0.3
 
 
   integer, dimension(0:L-1, 0:L-1, 0:L-1) :: grid
@@ -33,9 +33,9 @@ program DLCA
   character(len=100) :: errmsg
   character(len=*), parameter :: filepath = "P.dat"
 
-  ! Initialize phis from 0 to 0.1 in Npts steps -> Figure 2 of Gimel.
+  ! Initialize phis from 0 to MAX_PHI in Npts steps -> Figure 2 of Gimel.
   do phi = 0, Npts-1
-     phis(phi) = real(phi) * 0.3 / real(Npts-1)
+     phis(phi) = real(phi) * MAX_PHI / real(Npts-1)
   end do
 
   open(fd, file=filepath, status="replace", iostat=io, iomsg=errmsg)
