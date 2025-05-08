@@ -1,113 +1,123 @@
 program DLCA
-    implicit none
+  implicit none
 
-    integer, parameter :: Npts = 40 ! number of phis
-    integer, parameter :: L = 20 ! size of the box
-    real, parameter :: alpha = -0.55
-    
-    integer, parameter :: MAX_NO_MORE_AGGREGATION = 1e5 !!! Checking for no dynamics
-    
-    integer, dimension(0:L-1, 0:L-1, 0:L-1) :: grid
-    type :: Particle
-        integer :: id
-        integer :: x, y, z
-        integer :: m = 1
-        integer :: cluster_id
-    end type Particle
-    type(Particle), allocatable :: particles(:)
-    integer, allocatable :: cluster_size(:)
-    
-    integer :: tsim = 0, Nc = 0, N = 0
-    real :: tgel = 0
-    logical :: hasEnded, hasPercolated
+  ! Parameters to tune
+  integer, parameter :: Npts = 40 ! number of phis
+  integer, parameter :: L = 10 ! size of the box
+  integer, parameter :: MAX_STEPS_WITHOUT_AGGREGATION = 1e5  !!! Checking for no dynamics
+  real, parameter :: alpha = 0.55
 
-    integer :: run, runs = 100
-    integer :: number_percolate
-    integer :: no_growth_steps, prev_max_cluster
 
-    real, dimension(0:Npts-1) :: phis
-    integer phi
+  integer, dimension(0:L-1, 0:L-1, 0:L-1) :: grid
+  type :: Particle
+     integer :: id
+     integer :: x, y, z
+     integer :: m = 1
+     integer :: cluster_id
+  end type Particle
+  type(Particle), allocatable :: particles(:)
+  integer, allocatable :: cluster_size(:)
 
-    integer :: fd, io
-    character(len=100) :: errmsg
-    character(len=*), parameter :: filepath = "P.dat"
+  integer :: tsim = 0, Nc = 0, N = 0
+  real :: tgel = 0.0, tgel_report = 0.0
+  logical :: hasEnded, hasPercolated
 
-    ! Initialize phis from 0 to 0.1 in Npts steps
-    do phi = 0, Npts-1
-        phis(phi) = real(phi) * 0.3 / real(Npts-1)
-    end do
+  integer :: run, runs = 100
+  integer :: number_percolate, number_reach_max_aggreg = 0
+  integer :: no_growth_steps, prev_max_cluster
 
-    open(fd, file=filepath, status="replace", iostat=io, iomsg=errmsg)
-    if(io /= 0) then
-        print *, "Error while opening file : ", trim(errmsg)
-        stop 1
-    end if 
+  real, dimension(0:Npts-1) :: phis
+  integer phi
 
-    write(fd, *) "@ L = ", L
-    call flush(fd)
-    write(fd, * ) "@ phi0, P"
-    call flush(fd)
-    do phi=0, Npts-1
-        N = int(phis(phi) * L**3)
-       
-        print *, "Running for ", N, " particles"
-        allocate(particles(0:N-1))
-        allocate(cluster_size(0:N-1))
-        grid = -1
-        hasEnded = .false.
-        number_percolate = 0
+  integer :: fd, io
+  character(len=100) :: errmsg
+  character(len=*), parameter :: filepath = "P.dat"
 
-        !!! 
-        !!! ARGUMENT TO FORCE CONVERGENCE : IF N < L, THEN THE SYSTEM CANNOT PERCOLATE.
-        !!! AS SUCH, WE CAN DIRECTLY GO TO NEXT ITERATION 
-        !!!
+  ! Initialize phis from 0 to 0.1 in Npts steps -> Figure 2 of Gimel.
+  do phi = 0, Npts-1
+     phis(phi) = real(phi) * 0.3 / real(Npts-1)
+  end do
 
-        if(N < L) goto 82
+  open(fd, file=filepath, status="replace", iostat=io, iomsg=errmsg)
+  if(io /= 0) then
+     print *, "Error while opening file : ", trim(errmsg)
+     stop 1
+  end if
 
-        do run=0,runs-1
-            !!! INIT !!! 
-            tsim = 0
-            tgel = 0
-            hasEnded = .false.
-            hasPercolated = .false.
-            grid = -1
-            no_growth_steps = 0
-            prev_max_cluster = 1
-            call init_particles
-    
-            !!! RUNNING THE SIMULATION
-            do while(hasEnded .NEQV. .true.)
-                tsim = tsim + 1
-                Nc = count_active_clusters()
-                tgel = tgel + 1.0 / Nc
-                call trial
+  write(fd, *) "@ L = ", L
+  call flush(fd)
+  write(fd, *) "@ MAX_STEPS_WITHOUT_AGGREGATION = ", MAX_STEPS_WITHOUT_AGGREGATION
+  write(fd, *) "@ phi0, P, tsim_avg, tgel_avg"
+  call flush(fd)
+  do phi=0, Npts-1
+     N = int(phis(phi) * L**3)
+     tsim = 0
+     tgel_report = 0.0
 
-                if (maxval(cluster_size) <= prev_max_cluster) then
-                    no_growth_steps = no_growth_steps + 1
-                else
-                    no_growth_steps = 0
-                    prev_max_cluster = maxval(cluster_size)
-                end if
+     print *, "Running for ", N, " particles"
+     allocate(particles(0:N-1))
+     allocate(cluster_size(0:N-1))
+     grid = -1
+     hasEnded = .false.
+     number_percolate = 0
 
-                if (no_growth_steps >= MAX_NO_MORE_AGGREGATION) then
-                    hasEnded = .true.
-                end if
-            end do
-            if(hasPercolated) number_percolate = number_percolate + 1  
-        end do
 
-        82 print *, "Number of particles", N
-        print *, "Number of percolated systems ", number_percolate
-        print *, "Number of runs", runs
-        print *
-        write(fd, *) phis(phi), dble(number_percolate)/dble(runs)
-        call flush(fd)
+     ! First stopping criterion
+     !!! ARGUMENT TO FORCE CONVERGENCE : IF N < L, THEN THE SYSTEM CANNOT PERCOLATE.
+     !!! AS SUCH, WE CAN DIRECTLY GO TO NEXT ITERATION 
+     if(N < L) goto 82
+
+     do run=0,runs-1
         
-        deallocate(particles)
-        deallocate(cluster_size)
-    end do
+        tgel = 0.0
+        hasEnded = .false.
+        hasPercolated = .false.
+        grid = -1
+        no_growth_steps = 0
+        prev_max_cluster = 1
+        call init_particles
 
-    close(fd)
+        ! Running the simulation 
+        do while(hasEnded .NEQV. .true.)
+           tsim = tsim + 1
+           Nc = count_active_clusters()
+           tgel = tgel + 1.0 / Nc
+           call trial
+
+           ! 2nd stopping criterion
+           if (maxval(cluster_size) <= prev_max_cluster) then
+              no_growth_steps = no_growth_steps + 1
+           else
+              no_growth_steps = 0
+              prev_max_cluster = maxval(cluster_size)
+           end if
+           if (no_growth_steps >= MAX_STEPS_WITHOUT_AGGREGATION) then
+              number_reach_max_aggreg = number_reach_max_aggreg + 1
+              hasEnded = .true.
+           end if
+           
+        end do
+        
+        if(hasPercolated) then
+           number_percolate = number_percolate + 1
+           tgel_report = tgel_report + tgel
+        end if
+        
+     end do
+
+82   print *, "Number of particles", N
+     print *, "Number of percolated systems ", number_percolate
+     print *, "Number of runs", runs
+     print *, "Number of runs that reached MAX_STEPS_WITHOUT_AGGREGATION", number_reach_max_aggreg
+     print *
+     write(fd, *) phis(phi), dble(number_percolate)/dble(runs), dble(tsim)/dble(runs), dble(tgel_report)/dble(number_percolate)
+     call flush(fd)
+
+     deallocate(particles)
+     deallocate(cluster_size)
+  end do
+
+  close(fd)
 
 contains
 function count_active_clusters()
@@ -332,7 +342,7 @@ subroutine trial
     if (.not. can_move) return
 
     ! check acceptance
-    prob = real(cluster_size(cid)) ** alpha
+    prob = real(cluster_size(cid)) ** (-1.0 * alpha)
     call random_number(r)
     if (r >= prob) return
 
